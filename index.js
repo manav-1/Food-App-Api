@@ -5,6 +5,7 @@ const cors = require("cors");
 const config = require("./config");
 const bcrypt = require("bcryptjs");
 const User = require("./models/user");
+const jwt = require("jsonwebtoken");
 
 const port = config.port;
 const app = express();
@@ -38,7 +39,14 @@ app.post("/api/signup", async (req, res) => {
       password: encryptedPassword,
       type: type,
     });
-    res.status(200).send(true);
+    const token = jwt.sign(
+      { user_id: user._id, email },
+      process.env.TOKEN_KEY,
+      { expiresIn: "2h" }
+    );
+    var uData = { token, ...user._doc };
+    console.log(uData);
+    return res.status(200).send(uData);
   } catch (err) {
     res.status(400).send("TA");
   }
@@ -50,12 +58,35 @@ app.post("/api/login", async (req, res) => {
     const { type, email, password } = req.body;
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
-      return res.status(200).send(user);
+      const token = jwt.sign(
+        { user_id: user._id, email },
+        process.env.TOKEN_KEY,
+        { expiresIn: "2h" }
+      );
+      var uData = { token, ...user._doc };
+      console.log(uData);
+      return res.status(200).send(uData);
     }
 
     return res.status(401).send("Invalid Credentials");
   } catch (err) {
     res.status(400).send("TA");
+  }
+});
+
+app.post("/verifyUser", (req, res) => {
+  const token = req.body.token;
+  console.log(token);
+  if (!token) {
+    return res.status(401).send("Token is required");
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+    req.user = decoded;
+    return res.status(200).send(true);
+    console.log("Decoded", decoded);
+  } catch (err) {
+    return res.status(401).send("Invalid Token");
   }
 });
 
