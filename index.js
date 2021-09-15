@@ -16,6 +16,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (req, res) => {
+  res.send("OKAY");
+});
+
 app.post("/api/signup", async (req, res) => {
   console.log("req received");
   try {
