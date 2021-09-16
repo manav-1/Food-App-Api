@@ -22,7 +22,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/signup", async (req, res) => {
-  console.log("req received");
   try {
     const { type, name, email, password } = req.body;
 
@@ -45,7 +44,6 @@ app.post("/api/signup", async (req, res) => {
       { expiresIn: "2h" }
     );
     var uData = { token, ...user._doc };
-    console.log(uData);
     return res.status(200).send(uData);
   } catch (err) {
     res.status(400).send("TA");
@@ -53,7 +51,6 @@ app.post("/api/signup", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-  console.log("req received");
   try {
     const { type, email, password } = req.body;
     const user = await User.findOne({ email });
@@ -64,7 +61,6 @@ app.post("/api/login", async (req, res) => {
         { expiresIn: "2h" }
       );
       var uData = { token, ...user._doc };
-      console.log(uData);
       return res.status(200).send(uData);
     }
 
@@ -76,7 +72,6 @@ app.post("/api/login", async (req, res) => {
 
 app.post("/verifyUser", (req, res) => {
   const token = req.body.token;
-  console.log(token);
   if (!token) {
     return res.status(401).send("Token is required");
   }
@@ -84,8 +79,10 @@ app.post("/verifyUser", (req, res) => {
     const decoded = jwt.verify(token, process.env.TOKEN_KEY);
     req.user = decoded;
     return res.status(200).send(true);
-    console.log("Decoded", decoded);
   } catch (err) {
+    if (err.message == "jwt expired") {
+      return res.status(406).send("Token Expired");
+    }
     return res.status(401).send("Invalid Token");
   }
 });
