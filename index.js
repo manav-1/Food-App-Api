@@ -5,6 +5,7 @@ const cors = require("cors");
 const config = require("./config");
 const bcrypt = require("bcryptjs");
 const User = require("./models/user");
+const Restraunt = require("./models/restraunt");
 const jwt = require("jsonwebtoken");
 
 const port = config.port;
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 app.post("/api/signup", async (req, res) => {
   try {
     const { type, name, email, password } = req.body;
+    console.log(name, email, password);
 
     const oldUser = await User.findOne({ email });
     if (oldUser) {
@@ -53,6 +55,7 @@ app.post("/api/signup", async (req, res) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { type, email, password } = req.body;
+    console.log(email, password);
     const user = await User.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign(
@@ -66,6 +69,7 @@ app.post("/api/login", async (req, res) => {
 
     return res.status(401).send("Invalid Credentials");
   } catch (err) {
+    console.log(err);
     res.status(400).send("TA");
   }
 });
